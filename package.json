@@ -1,0 +1,30 @@
+{
+  "name": "WeCare",
+  "version": "1.0.0",
+  "description": "WeCare is an online life coaching application that helps its users to sign up and log in to seek the guidance of famous life coaches. Users can search for a life coach on speciality and can book an appointment within 7 days. They can also see upcoming appointments and can reschedule or cancel the appointments. Similarly, life coaches can also sign up and login and can see their upcoming schedule.",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon ./app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akash-coded/WeCare.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akash-coded/WeCare/issues"
+  },
+  "homepage": "https://github.com/akash-coded/WeCare#readme",
+  "devDependencies": {
+    "browser-sync": "^2.26.13",
+    "nodemon": "^2.0.6"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "helmet": "^4.1.1"
+  }
+}
