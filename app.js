@@ -34,14 +34,22 @@ const corsOptions = {
 };
 const logger = winston.createLogger({
   level: "info",
-  format: winston.format.json(),
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),
+    winston.format.prettyPrint()
+  ),
   defaultMeta: { service: "user-service" },
   transports: [
     //
     // - Write all logs with level `error` and below to `error.log`
     // - Write all logs with level `info` and below to `combined.log`
     //
-    new winston.transports.File({ filename: "error.log", level: "error" }),
+    new winston.transports.File({
+      filename: "error.log",
+      level: "error",
+      timestamp: true,
+    }),
     new winston.transports.File({ filename: "combined.log" }),
   ],
   exceptionHandlers: [
@@ -80,7 +88,7 @@ app.use(express.json());
 // parse cookie header and populate req.cookies with an object keyed by the cookie names
 app.use(cookieParser());
 
-// adding Helmet to enhance your API's security by defining various HTTP headers
+// adding Helmet to enhance your API security by defining various HTTP headers
 app.use(helmet());
 
 // enabling CORS
@@ -104,6 +112,21 @@ app.get("/", (req, res) => {
 /**
  * Server Activation
  */
+
+// Connecting to MongoDB
+mongoose.connect("mongodb://localhost:27017/weCare", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
+  useCreateIndex: true,
+});
+const db = mongoose.connection;
+db.on("error", function () {
+  logger.error("Database connection error");
+});
+db.once("open", function () {
+  logger.info("Database connection successful");
+});
 
 // starting the server
 app.listen(port, () => {
