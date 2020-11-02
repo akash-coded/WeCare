@@ -22,6 +22,7 @@
     "nodemon": "^2.0.6"
   },
   "dependencies": {
+    "async": "^3.2.0",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.5",
@@ -32,7 +33,13 @@
     "helmet": "^4.1.1",
     "mongodb": "^3.6.2",
     "mongodb-memory-server": "^6.9.2",
+    "mongoose": "^5.10.11",
+    "mongoose-data-seed": "^2.1.6",
     "morgan": "^1.10.0",
+    "validator": "^13.1.17",
     "winston": "^3.3.3"
+  },
+  "mdSeed": {
+    "seedersFolder": "./seeders"
   }
 }

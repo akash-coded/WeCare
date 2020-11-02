@@ -15,6 +15,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const winston = require("winston");
+const mongoose = require("mongoose");
 
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // const bodyParser = require("body-parser");
