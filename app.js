@@ -101,12 +101,67 @@ app.use(morgan("combined", { stream: accessLogStream }));
 // app.use(bodyParser.json());
 
 /**
- * Routes Definitions
+ * Routes Definitions (Defining Endpoints)
  */
 
-// defining an endpoint
 app.get("/", (req, res) => {
   res.status(200).send("WeCare: Extending Care For Devs");
+});
+
+app.post("/users", (req, res) => {
+  res.status(200).send("WeCare: Extending Care For Devs");
+});
+
+app.post("/users/login", (req, res) => {
+  res.status(200).send("WeCare: Extending Care For Devs");
+});
+
+app.get("/users/:userId", (req, res) => {
+  res.status(200).send(req.params);
+});
+
+app.post("/coaches", (req, res) => {
+  res.status(200).send("WeCare: Extending Care For Devs");
+});
+
+app.post("/coaches/login", (req, res) => {
+  res.status(200).send("WeCare: Extending Care For Devs");
+});
+
+app.get("/coaches/all", (req, res) => {
+  res.status(200).send("WeCare: Extending Care For Devs");
+});
+
+app.get("/coaches/:coachId", (req, res) => {
+  res.status(200).send(req.params);
+});
+
+app.post("/users/booking/:userId/:coachId", (req, res) => {
+  res.status(200).send(req.params);
+});
+
+app
+  .route("/users/booking/:bookingId")
+  .put((req, res) => {
+    res.status(200).send(req.params);
+  })
+  .delete((req, res) => {
+    res.status(200).send(req.params);
+  });
+
+app.get("/coaches/booking/:coachId", (req, res) => {
+  res.status(200).send(req.params);
+});
+
+app.get("/users/booking/:userId", (req, res) => {
+  res.status(200).send(req.params);
+});
+
+app.all("*", (req, res, next) => {
+  const err = new Error();
+  err.message = "Invalid URL";
+  err.status = 404;
+  next(err);
 });
 
 /**

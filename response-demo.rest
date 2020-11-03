@@ -1,3 +1,11 @@
-GET http://localhost:3001 HTTP/1.1
+GET http://localhost:3001/coaches/1234 HTTP/1.1
 
 ###
+
+POST http://localhost:3001/users/booking/9876/1234 HTTP/1.1
+content-type: application/json
+
+{
+    "Slot":"9 AM to 10 AM",
+    "DateOfAppointment":"2020-09-03"
+}
