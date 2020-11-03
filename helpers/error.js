@@ -1,3 +1,4 @@
+const path = require("path");
 const fs = require("fs");
 const { promisify } = require("util");
 
@@ -12,7 +13,8 @@ class ErrorHandler extends Error {
 }
 
 const handleError = (err, res) => {
-  const { statusCode, message } = err;
+  const statusCode = err.statusCode || 500;
+  const message = err.message;
   (async () => {
     await appendFile(
       "./logs/errorResponse.log",

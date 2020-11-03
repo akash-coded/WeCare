@@ -15,10 +15,13 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const winston = require("winston");
-// const { logger } = require("./helpers/logger");
 const users = require("./routes/users");
 const coaches = require("./routes/coaches");
 const { handleError, ErrorHandler } = require("./helpers/error");
+
+const Coach = require("./models/coach");
+
+// const { logger } = require("./helpers/logger");
 
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // const bodyParser = require("body-parser");
@@ -112,6 +115,9 @@ app.use("/users", users);
 // coach-specific routes
 app.use("/coaches", coaches);
 // catch all requests to unspecified paths
+app.get("/test", () => {
+  Coach.insertOne({ coachId: "CI-1111", name: "Dravid" });
+});
 app.all("*", (req, res, next) => {
   next(new ErrorHandler(404, "Invalid Path"));
 });

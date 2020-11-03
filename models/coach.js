@@ -1,13 +1,22 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const coachSchema = new mongoose.Schema({
-  CoachId: String,
-  Name: String,
-  Password: String,
-  Gender: String,
-  DateOfBirth: Date,
-  MobileNumber: Number,
-  Specialty: String,
-});
+const coachSchema = new Schema(
+  {
+    coachId: String,
+    name: String,
+    password: String,
+    gender: String,
+    dateOfBirth: Date,
+    mobileNumber: Number,
+    speciality: String,
+  },
+  {
+    timestamps: {
+      createdAt: true,
+      updatedAt: true,
+    },
+  }
+);
 
 module.exports = mongoose.model("Coach", coachSchema);
