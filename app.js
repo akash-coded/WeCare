@@ -9,13 +9,14 @@ const compression = require("compression");
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const debug = require("debug")("server");
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
-const winston = require("winston");
 const mongoose = require("mongoose");
+const winston = require("winston");
+// const logger = require("./helpers/logger");
+const { handleError, ErrorHandler } = require("./helpers/error");
 
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // const bodyParser = require("body-parser");
@@ -32,6 +33,11 @@ const corsOptions = {
   preflightContinue: false,
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
+// create a write stream (in append mode)
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "/logs/access.log"),
+  { flags: "a" }
+);
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
@@ -46,17 +52,13 @@ const logger = winston.createLogger({
     // - Write all logs with level `info` and below to `combined.log`
     //
     new winston.transports.File({
-      filename: "error.log",
+      filename: "logs/error.log",
       level: "error",
-      timestamp: true,
     }),
-    new winston.transports.File({ filename: "combined.log" }),
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({ filename: "exceptions.log" }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.File({ filename: "rejections.log" }),
+    new winston.transports.File({
+      filename: "logs/combined.log",
+      level: "debug",
+    }),
   ],
 });
 //
@@ -70,10 +72,13 @@ if (process.env.NODE_ENV !== "production") {
     })
   );
 }
-// create a write stream (in append mode)
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, "access.log"),
-  { flags: "a" }
+// Call exceptions.handle with a transport to handle exceptions
+logger.exceptions.handle(
+  new winston.transports.File({ filename: "logs/exceptions.log" })
+);
+// Call rejections.handle with a transport to handle rejections
+logger.rejections.handle(
+  new winston.transports.File({ filename: "logs/rejections.log" })
 );
 
 /**
@@ -82,31 +87,22 @@ const accessLogStream = fs.createWriteStream(
 
 // for gzip compression
 app.use(compression());
-
+// parse incoming requests with JSON payloads
 app.use(express.json());
-
 // parse cookie header and populate req.cookies with an object keyed by the cookie names
 app.use(cookieParser());
-
 // adding Helmet to enhance your API security by defining various HTTP headers
 app.use(helmet());
-
 // enabling CORS
 app.use(cors(corsOptions));
-
 // adding morgan to log HTTP requests
 app.use(morgan("combined", { stream: accessLogStream }));
-
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // app.use(bodyParser.json());
 
 /**
  * Routes Definitions (Defining Endpoints)
  */
-
-app.get("/", (req, res) => {
-  res.status(200).send("WeCare: Extending Care For Devs");
-});
 
 app.post("/users", (req, res) => {
   res.status(200).send("WeCare: Extending Care For Devs");
@@ -158,10 +154,11 @@ app.get("/users/booking/:userId", (req, res) => {
 });
 
 app.all("*", (req, res, next) => {
-  const err = new Error();
-  err.message = "Invalid URL";
-  err.status = 404;
-  next(err);
+  next(new ErrorHandler(404, "Invalid Path"));
+});
+
+app.use((err, req, res, next) => {
+  handleError(err, res);
 });
 
 /**
