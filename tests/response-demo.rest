@@ -1,4 +1,4 @@
-GET http://localhost:3001/coaches/all HTTP/1.1
+GET http://localhost:3001/test HTTP/1.1
 
 ###
 

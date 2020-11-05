@@ -1,4 +1,3 @@
-const path = require("path");
 const fs = require("fs");
 const { promisify } = require("util");
 
@@ -22,9 +21,7 @@ const handleError = (err, res) => {
     );
   })();
   res.status(statusCode).json({
-    status: "error",
-    statusCode,
-    message,
+    message: message,
   });
 };
 

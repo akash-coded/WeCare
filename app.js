@@ -5,22 +5,23 @@
  */
 
 // importing the dependencies
-const compression = require("compression");
 const express = require("express");
+const compression = require("compression");
 const path = require("path");
 const fs = require("fs");
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose");
 const winston = require("winston");
+const mongoose = require("mongoose");
+const mongooseIncrement = require("mongoose-increment");
+increment = mongooseIncrement(mongoose);
 const users = require("./routes/users");
 const coaches = require("./routes/coaches");
 const { handleError, ErrorHandler } = require("./helpers/error");
 
-const Coach = require("./models/coach");
-
+const User = require("./models/user");
 // const { logger } = require("./helpers/logger");
 
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
@@ -115,8 +116,30 @@ app.use("/users", users);
 // coach-specific routes
 app.use("/coaches", coaches);
 // catch all requests to unspecified paths
-app.get("/test", () => {
-  Coach.insertOne({ coachId: "CI-1111", name: "Dravid" });
+app.get("/test", (req, res, next) => {
+  User.create(
+    {
+      name: "true",
+      password: "tekkcfgdfggdfhgh@123",
+      dateOfBirth: "1971-10-10",
+      gender: "F",
+      mobileNumber: 7375543707,
+      email: "testing@subject.com",
+      pincode: 512478,
+      city: true,
+      state: "Gauten Province",
+      country: "South Africa",
+    },
+    function (err, user) {
+      if (err && err.message) {
+        let errorMessage = err.message.split(":")[2].split(",")[0].trim();
+        return next(new ErrorHandler(400, errorMessage));
+      }
+      res.status(201).send({
+        message: user.userId,
+      });
+    }
+  );
 });
 app.all("*", (req, res, next) => {
   next(new ErrorHandler(404, "Invalid Path"));
@@ -138,8 +161,9 @@ mongoose.connect("mongodb://localhost:27017/weCare", {
   useCreateIndex: true,
 });
 const db = mongoose.connection;
-db.on("error", function () {
+db.on("error", function (err) {
   logger.error("Database connection error");
+  next(err);
 });
 db.once("open", function () {
   logger.info("Database connection successful");
