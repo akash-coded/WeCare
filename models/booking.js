@@ -1,11 +1,14 @@
 const mongoose = require("mongoose");
+const moment = require("moment");
 const uniqueValidator = require("mongoose-unique-validator");
 const Schema = mongoose.Schema;
-const { User } = require("user");
-const { Coach } = require("coach");
-const moment = require("moment");
+const User = require("./user");
+const Coach = require("./coach");
+const { ErrorHandler } = require("../helpers/error");
 
 moment().format();
+
+/// SCHEMA ///
 
 const bookingSchema = new Schema(
   {
@@ -15,16 +18,15 @@ const bookingSchema = new Schema(
       trim: true,
       match: [/^(UI-000)\d$/, "User Id does not exist"],
       validate: {
-        validator: {
-          function(v) {
-            return User.findOne()
-              .byUserId(v)
-              .exec((err, user) => {
-                return user;
-              });
-          },
+        validator: function (v) {
+          User.findOne()
+            .byUserId(v)
+            .exec((err, user) => {
+              if (err) return next(new ErrorHandler(err));
+              return user;
+            });
         },
-        message: (props) => "User Id does not exist",
+        message: "User Id does not exist",
       },
     },
     coachId: {
@@ -33,16 +35,15 @@ const bookingSchema = new Schema(
       trim: true,
       match: [/^(CI-000)\d$/, "Coach Id does not exist"],
       validate: {
-        validator: {
-          function(v) {
-            return Coach.findOne()
-              .byCoachId(v)
-              .exec((err, coach) => {
-                return coach;
-              });
-          },
+        validator: function (v) {
+          Coach.findOne()
+            .byCoachId(v)
+            .exec((err, coach) => {
+              if (err) return next(new ErrorHandler(err));
+              return coach;
+            });
         },
-        message: (props) => "Coach Id does not exist",
+        message: "Coach Id does not exist",
       },
     },
     dateOfAppointment: {
@@ -60,16 +61,14 @@ const bookingSchema = new Schema(
         "Slot should be a valid one",
       ],
       validate: {
-        validator: {
-          function(v) {
-            const [from, to] = v.split(" to ");
-            const fromHours = moment(from, ["h A"]).format("HH");
-            const toHours = moment(to, ["h A"]).format("HH");
+        validator: function (v) {
+          const [from, to] = v.split(" to ");
+          const fromHours = moment(from, ["h A"]).format("HH");
+          const toHours = moment(to, ["h A"]).format("HH");
 
-            return toHours > fromHours;
-          },
+          return toHours > fromHours;
         },
-        message: (props) => "Coach Id does not exist",
+        message: "Slot should be a valid one",
       },
     },
   },
@@ -83,13 +82,15 @@ const bookingSchema = new Schema(
   }
 );
 
-// secondary indexes
+/// SECONDARY INDEXES ///
+
 bookingSchema.index(
   { coachId: 1, dateOfAppointment: 1, slot: 1 },
   { unique: true }
 );
 
-// virtuals
+/// VIRTUALS ///
+
 bookingSchema.virtual("user", {
   ref: "User", // The model to use
   localField: "userId", // Find people where `localField`
@@ -98,6 +99,7 @@ bookingSchema.virtual("user", {
   // an array. `justOne` is false by default.
   justOne: true,
 });
+
 bookingSchema.virtual("coach", {
   ref: "Coach", // The model to use
   localField: "coachId", // Find people where `localField`
@@ -107,12 +109,12 @@ bookingSchema.virtual("coach", {
   justOne: true,
 });
 
-// query helpers
+/// PLUGINS ///
 
-// plugins
 bookingSchema.plugin(uniqueValidator, {
   message: "Coach exists with this name",
 });
+
 bookingSchema.plugin(increment, {
   type: String,
   modelName: "Booking",

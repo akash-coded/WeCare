@@ -32,7 +32,7 @@ const User = require("./models/user");
  */
 
 const app = express();
-const port = process.env.PORT || "3001";
+const port = process.env.PORT || "3002";
 const corsOptions = {
   origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
@@ -133,7 +133,7 @@ app.get("/test", (req, res, next) => {
     function (err, user) {
       if (err && err.message) {
         let errorMessage = err.message.split(":")[2].split(",")[0].trim();
-        return next(new ErrorHandler(400, errorMessage));
+        return next(new ErrorHandler(errorMessage, 400));
       }
       res.status(201).send({
         message: user.userId,
@@ -142,7 +142,7 @@ app.get("/test", (req, res, next) => {
   );
 });
 app.all("*", (req, res, next) => {
-  next(new ErrorHandler(404, "Invalid Path"));
+  next(new ErrorHandler("Invalid Path", 404));
 });
 // middleware for custom error handling
 app.use((err, req, res, next) => {

@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
+const moment = require("moment");
 const uniqueValidator = require("mongoose-unique-validator");
 const Schema = mongoose.Schema;
-const moment = require("moment");
 
 moment().format();
+
+/// SCHEMA ///
 
 const coachSchema = new Schema(
   {
@@ -12,12 +14,21 @@ const coachSchema = new Schema(
       required: [true, "Name is required"],
       trim: true,
       unique: true,
+      uniqueCaseInsensitive: true,
       minlength: [3, "Name should have minimum 3 and maximum 50 characters"],
       maxlength: [50, "Name should have minimum 3 and maximum 50 characters"],
     },
     password: {
       type: String,
       required: [true, "Password is required"],
+      minlength: [
+        5,
+        "Password should have minimum 5 and maximum 10 characters",
+      ],
+      maxlength: [
+        10,
+        "Password should have minimum 5 and maximum 10 characters",
+      ],
     },
     gender: {
       type: String,
@@ -64,20 +75,24 @@ const coachSchema = new Schema(
   }
 );
 
-// create a virtual property `age` that's computed from `dateOfBirth`.
+/// VIRTUALS ///
+
 coachSchema.virtual("age").get(function () {
   return moment().diff(this.dateOfBirth, "years");
 });
 
-// query helpers
+/// QUERY HELPERS ///
+
 coachSchema.query.byCoachId = function (coachId) {
   return this.where({ coachId: new RegExp(coachId, "i") });
 };
 
-// plugins
+/// PLUGINS ///
+
 coachSchema.plugin(uniqueValidator, {
   message: "Coach exists with this name",
 });
+
 coachSchema.plugin(increment, {
   type: String,
   modelName: "Coach",
@@ -85,6 +100,22 @@ coachSchema.plugin(increment, {
   prefix: "CI-000",
   start: 0,
   increment: 1,
+});
+
+/// MODEL HOOKS ///
+
+coachSchema.pre("save", function (next) {
+  const coach = this;
+
+  // only hash the password if it has been modified (or is new)
+  if (!coach.isModified("password")) return next();
+
+  bcrypt.hash(coach.password, saltRounds, function (err, hash) {
+    if (err) return next(new ErrorHandler(err));
+    // override the plaintext password with the hashed one
+    coach.password = hash;
+    next();
+  });
 });
 
 module.exports = mongoose.model("Coach", coachSchema);

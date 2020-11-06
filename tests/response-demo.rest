@@ -1,11 +1,35 @@
-GET http://localhost:3001/test HTTP/1.1
+GET http://localhost:3002/test HTTP/1.1
 
 ###
 
-POST http://localhost:3001/users/booking/9876/1234 HTTP/1.1
+POST http://localhost:3002/users/ HTTP/1.1
 content-type: application/json
 
 {
-    "slot":"9 AM to 10 AM",
-    "dateOfAppointment":"2020-09-03"
+    "name": "true",
+    "password": "fhgh@123",
+    "dateOfBirth": "1971-10-10",
+    "gender": "F",
+    "mobileNumber": 7375543707,
+    "email": "verytesting@subject.com",
+    "pincode": 512478,
+    "city": true,
+    "state": "Gauten Province",
+    "country": "South Africa"
 }
+
+###
+
+POST http://localhost:3002/users/login HTTP/1.1
+content-type: application/json
+
+{
+    "id": "UI-00016",
+    "password": "fhgh@123"
+}
+
+###
+
+GET http://localhost:3002/users/UI-00016 HTTP/1.1
+
+###

@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
 
-// middleware that is specific to this router
+// Require controller modules.
+const user_controller = require("../controllers/userController");
+
+/// USER ROUTES ///
 
 // define the user registration route
 router.post(
@@ -18,18 +21,15 @@ router.post(
     body("state").trim().escape(),
     body("country").trim().escape(),
   ],
-  (req, res) => {
-    res.status(200).send("WeCare: Extending Care For Devs");
-  }
+  user_controller.register_user
 );
+
 // define the user login route
-router.post("/login", [body("id").trim().escape()], (req, res) => {
-  res.status(200).send("WeCare: Extending Care For Devs");
-});
+router.post("/login", [body("id").trim().escape()], user_controller.login_user);
+
 // define the user details route
-router.get("/:userId", (req, res) => {
-  res.status(200).send(req.params);
-});
+router.get("/:userId", user_controller.fetch_user_details);
+
 // define the route to reschedule or cancel an existing appointment
 router
   .route("/booking/:bookingId")
@@ -42,10 +42,12 @@ router
   .delete((req, res) => {
     res.status(200).send(req.params);
   });
+
 // define the route to return all appointments made by the user
 router.get("/booking/:userId", (req, res) => {
   res.status(200).send(req.params);
 });
+
 // define the route for an user to make an appointment
 router.post(
   "/booking/:userId/:coachId",

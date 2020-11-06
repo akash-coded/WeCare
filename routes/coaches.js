@@ -27,7 +27,7 @@ router.post("/login", [body("id").trim().escape()], (req, res) => {
 // define the route to enlist all available coaches
 router.get("/all", (req, res) => {
   Coach.find({}).exec((err, coaches) => {
-    if (err) throw new ErrorHandler(500, err);
+    if (err) throw new ErrorHandler(err);
     res.status(200).send(coaches);
   });
 });

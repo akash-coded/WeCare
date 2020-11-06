@@ -1,9 +1,15 @@
 const mongoose = require("mongoose");
-const uniqueValidator = require("mongoose-unique-validator");
-const Schema = mongoose.Schema;
+const sanitize = require("mongo-sanitize");
 const moment = require("moment");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+const uniqueValidator = require("mongoose-unique-validator");
+const { ErrorHandler } = require("../helpers/error");
+const Schema = mongoose.Schema;
 
 moment().format();
+
+/// SCHEMA ///
 
 const userSchema = new Schema(
   {
@@ -17,6 +23,14 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
+      minlength: [
+        5,
+        "Password should have minimum 5 and maximum 10 characters",
+      ],
+      maxlength: [
+        10,
+        "Password should have minimum 5 and maximum 10 characters",
+      ],
     },
     gender: {
       type: String,
@@ -44,6 +58,8 @@ const userSchema = new Schema(
       required: [true, "Email is required"],
       trim: true,
       unique: true,
+      index: true,
+      uniqueCaseInsensitive: true,
       match: [/[^@]+@[^\.]+\.com/, "Email should be a valid one"],
     },
     mobileNumber: {
@@ -93,20 +109,25 @@ const userSchema = new Schema(
   }
 );
 
+/// VIRTUALS ///
+
 // create a virtual property `age` that's computed from `dateOfBirth`.
 userSchema.virtual("age").get(function () {
   return moment().diff(this.dateOfBirth, "years");
 });
 
-// query helpers
+/// QUERY HELPERS ///
+
 userSchema.query.byUserId = function (userId) {
   return this.where({ userId: new RegExp(userId, "i") });
 };
 
-// plugins
+/// PLUGINS ///
+
 userSchema.plugin(uniqueValidator, {
   message: "User exists with this email id",
 });
+
 userSchema.plugin(increment, {
   type: String,
   modelName: "User",
@@ -115,5 +136,55 @@ userSchema.plugin(increment, {
   start: 0,
   increment: 1,
 });
+
+/// MODEL HOOKS ///
+
+userSchema.pre("save", function (next) {
+  const user = this;
+
+  // only hash the password if it has been modified (or is new)
+  if (!user.isModified("password")) return next();
+
+  bcrypt.hash(user.password, saltRounds, function (err, hash) {
+    if (err) return next(new ErrorHandler(err));
+    // override the plaintext password with the hashed one
+    user.password = hash;
+    next();
+  });
+});
+
+/// INSTANCE METHODS ///
+
+userSchema.methods.comparePassword = function (candidatePassword, callback) {
+  bcrypt.compare(candidatePassword, this.password, function (err, isMatch) {
+    if (err) return callback(new ErrorHandler(err));
+    callback(null, isMatch);
+  });
+};
+
+/// STATICS ///
+
+// Assign a function to the "statics" object of our animalSchema
+userSchema.statics.createOne = function (data, callback) {
+  return this.create(
+    {
+      name: sanitize(data.name),
+      password: data.password,
+      dateOfBirth: sanitize(data.dateOfBirth),
+      gender: sanitize(data.gender),
+      mobileNumber: sanitize(data.mobileNumber),
+      email: sanitize(data.email),
+      pincode: sanitize(data.pincode),
+      city: sanitize(data.city),
+      state: sanitize(data.state),
+      country: sanitize(data.country),
+    },
+    callback
+  );
+};
+
+userSchema.statics.findByUserId = function (userId, callback) {
+  return this.findOne().where("userId").eq(sanitize(userId)).exec(callback);
+};
 
 module.exports = mongoose.model("User", userSchema);

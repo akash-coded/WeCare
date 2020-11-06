@@ -4,16 +4,16 @@ const { promisify } = require("util");
 const appendFile = promisify(fs.appendFile);
 
 class ErrorHandler extends Error {
-  constructor(statusCode, message) {
+  constructor(message, statusCode) {
     super();
-    this.statusCode = statusCode;
     this.message = message;
+    this.statusCode = statusCode;
   }
 }
 
 const handleError = (err, res) => {
-  const statusCode = err.statusCode || 500;
   const message = err.message;
+  const statusCode = err.statusCode || 500;
   (async () => {
     await appendFile(
       "./logs/errorResponse.log",

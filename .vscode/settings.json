@@ -1,3 +1,6 @@
 {
-    "rest-client.previewResponseInUntitledDocument": true
+    "rest-client.previewResponseInUntitledDocument": true,
+    "cSpell.words": [
+        "maxlength"
+    ]
 }
