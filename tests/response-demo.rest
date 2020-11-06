@@ -33,3 +33,43 @@ content-type: application/json
 GET http://localhost:3002/users/UI-00016 HTTP/1.1
 
 ###
+
+GET http://localhost:3002/users/booking/UI-0004 HTTP/1.1
+
+###
+
+POST http://localhost:3002/coaches/ HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Mike",
+    "password": "fhgh@123",
+    "dateOfBirth": "1971-10-10",
+    "gender": "F",
+    "mobileNumber": 7375543707,
+    "speciality": "Depression Issues"
+}
+
+###
+
+POST http://localhost:3002/coaches/login HTTP/1.1
+content-type: application/json
+
+{
+    "id": "CI-0002",
+    "password": "fhgh@123"
+}
+
+###
+
+GET http://localhost:3002/coaches/CI-0002 HTTP/1.1
+
+###
+
+GET http://localhost:3002/coaches/all HTTP/1.1
+
+###
+
+GET http://localhost:3002/coaches/booking/CI-0002 HTTP/1.1
+
+###

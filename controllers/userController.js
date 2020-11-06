@@ -36,10 +36,26 @@ exports.login_user = (req, res, next) => {
 
 exports.fetch_user_details = (req, res, next) => {
   User.findByUserId(req.params.userId, function (err, user) {
-    if (err && err.message) return next(new ErrorHandler(err));
+    if (err) return next(new ErrorHandler(err));
 
     if (!user) return next(new ErrorHandler("User id does not exist", 400));
 
     res.status(200).json(user);
+  });
+};
+
+exports.fetch_user_appointments = (req, res, next) => {
+  Booking.find({ userId: new RegExp(req.params.userId, "i") }).exec(function (
+    err,
+    bookings
+  ) {
+    if (err) return next(new ErrorHandler(err));
+
+    if (Array.isArray(bookings) && bookings.length === 0)
+      return next(
+        new ErrorHandler("Could not find any appointment details", 400)
+      );
+
+    res.status(200).json(bookings);
   });
 };

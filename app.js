@@ -21,8 +21,7 @@ const users = require("./routes/users");
 const coaches = require("./routes/coaches");
 const { handleError, ErrorHandler } = require("./helpers/error");
 
-const User = require("./models/user");
-// const { logger } = require("./helpers/logger");
+const Booking = require("./models/booking");
 
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // const bodyParser = require("body-parser");
@@ -117,29 +116,13 @@ app.use("/users", users);
 app.use("/coaches", coaches);
 // catch all requests to unspecified paths
 app.get("/test", (req, res, next) => {
-  User.create(
-    {
-      name: "true",
-      password: "tekkcfgdfggdfhgh@123",
-      dateOfBirth: "1971-10-10",
-      gender: "F",
-      mobileNumber: 7375543707,
-      email: "testing@subject.com",
-      pincode: 512478,
-      city: true,
-      state: "Gauten Province",
-      country: "South Africa",
-    },
-    function (err, user) {
-      if (err && err.message) {
-        let errorMessage = err.message.split(":")[2].split(",")[0].trim();
-        return next(new ErrorHandler(errorMessage, 400));
-      }
-      res.status(201).send({
-        message: user.userId,
-      });
-    }
-  );
+  Booking.find()
+    .where("coachId")
+    .eq("CI-0002")
+    .exec(function (err, bookings) {
+      if (err) res.json(err);
+      res.json(bookings);
+    });
 });
 app.all("*", (req, res, next) => {
   next(new ErrorHandler("Invalid Path", 404));

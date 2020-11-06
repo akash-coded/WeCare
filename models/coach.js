@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const moment = require("moment");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+const sanitize = require("mongo-sanitize");
 const uniqueValidator = require("mongoose-unique-validator");
+const Booking = require("./booking");
+const { ErrorHandler } = require("../helpers/error");
 const Schema = mongoose.Schema;
 
 moment().format();
@@ -81,6 +86,15 @@ coachSchema.virtual("age").get(function () {
   return moment().diff(this.dateOfBirth, "years");
 });
 
+coachSchema.virtual("bookings").get(function () {
+  return Booking.find({ coachId: new RegExp(this.coachId, "i") }).exec(
+    function (err, bookings) {
+      if (err) return next(new ErrorHandler(err));
+      return bookings;
+    }
+  );
+});
+
 /// QUERY HELPERS ///
 
 coachSchema.query.byCoachId = function (coachId) {
@@ -117,5 +131,35 @@ coachSchema.pre("save", function (next) {
     next();
   });
 });
+
+/// INSTANCE METHODS ///
+
+coachSchema.methods.comparePassword = function (candidatePassword, callback) {
+  bcrypt.compare(candidatePassword, this.password, function (err, isMatch) {
+    if (err) return callback(new ErrorHandler(err));
+    callback(null, isMatch);
+  });
+};
+
+/// STATICS ///
+
+// Assign a function to the "statics" object of our animalSchema
+coachSchema.statics.createOne = function (data, callback) {
+  return this.create(
+    {
+      name: sanitize(data.name),
+      password: data.password,
+      dateOfBirth: sanitize(data.dateOfBirth),
+      gender: sanitize(data.gender),
+      mobileNumber: sanitize(data.mobileNumber),
+      speciality: sanitize(data.speciality),
+    },
+    callback
+  );
+};
+
+coachSchema.statics.findByCoachId = function (coachId, callback) {
+  return this.findOne().where("coachId").eq(sanitize(coachId)).exec(callback);
+};
 
 module.exports = mongoose.model("Coach", coachSchema);
