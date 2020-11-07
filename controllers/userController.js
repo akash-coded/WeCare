@@ -1,5 +1,4 @@
 const User = require("../models/user");
-const Booking = require("../models/booking");
 const { ErrorHandler } = require("../helpers/error");
 
 exports.register_user = (req, res, next) => {
@@ -41,21 +40,5 @@ exports.fetch_user_details = (req, res, next) => {
     if (!user) return next(new ErrorHandler("User id does not exist", 400));
 
     res.status(200).json(user);
-  });
-};
-
-exports.fetch_user_appointments = (req, res, next) => {
-  Booking.find({ userId: new RegExp(req.params.userId, "i") }).exec(function (
-    err,
-    bookings
-  ) {
-    if (err) return next(new ErrorHandler(err));
-
-    if (Array.isArray(bookings) && bookings.length === 0)
-      return next(
-        new ErrorHandler("Could not find any appointment details", 400)
-      );
-
-    res.status(200).json(bookings);
   });
 };

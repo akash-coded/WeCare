@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 const moment = require("moment");
-const uniqueValidator = require("mongoose-unique-validator");
 const Schema = mongoose.Schema;
 const User = require("./user");
 const Coach = require("./coach");
 const { ErrorHandler } = require("../helpers/error");
+const uniqueValidator = require("mongoose-unique-validator");
+const sanitize = require("mongo-sanitize");
 
 moment().format();
 
@@ -57,7 +58,7 @@ const bookingSchema = new Schema(
       required: [true, "Slot is required"],
       trim: true,
       match: [
-        /^((1[12])|[1-9])\s(AM|PM|am|pm)\s(to)\s((1[12])|[1-9])\s(AM|PM|am|pm)$/,
+        /^((1[012])|[1-9])\s(AM|PM|am|pm)\s(to)\s((1[012])|[1-9])\s(AM|PM|am|pm)$/,
         "Slot should be a valid one",
       ],
       validate: {
@@ -112,7 +113,7 @@ bookingSchema.virtual("coach", {
 /// PLUGINS ///
 
 bookingSchema.plugin(uniqueValidator, {
-  message: "Coach exists with this name",
+  message: "There is an appointment in this slot already",
 });
 
 bookingSchema.plugin(increment, {
@@ -122,6 +123,76 @@ bookingSchema.plugin(increment, {
   prefix: "B-000",
   start: 0,
   increment: 1,
+});
+
+/// STATICS ///
+
+// Assign a function to the "statics" object of our animalSchema
+bookingSchema.statics.createOne = function (data, callback) {
+  return this.create(
+    {
+      userId: sanitize(data.userId),
+      coachId: sanitize(data.coachId),
+      dateOfAppointment: sanitize(data.dateOfAppointment),
+      slot: sanitize(data.slot),
+    },
+    callback
+  );
+};
+
+/// MODEL HOOKS ///
+
+bookingSchema.pre("validate", function (next) {
+  const booking = this;
+
+  if (!booking.isModified("slot")) return next();
+
+  mongoose.models["Booking"]
+    .find()
+    .select({ slot: 1, _id: 0 })
+    .and([
+      { dateOfAppointment: booking.dateOfAppointment },
+      { $or: [{ userId: booking.userId }, { coachId: booking.coachId }] },
+    ])
+    .exec(function (err, bookings) {
+      if (err) return next(new ErrorHandler(err));
+
+      if (Array.isArray(bookings) && bookings.length === 0) return next();
+
+      const [start, end] = booking.slot.split(" to ");
+      const startHours = moment(start, ["h A"]).format("HH");
+      const endHours = moment(end, ["h A"]).format("HH");
+
+      // converting array of JSON objects to array
+      let slots = [];
+      try {
+        slots = bookings.reduce((acc, val) => [...acc, val.slot], []);
+      } catch (e) {
+        return next(e);
+      }
+      try {
+        slots.forEach(function (value) {
+          const [from, to] = value.split(" to ");
+          const slotBeginning = moment(from, ["h A"]).format("HH");
+          const slotEnding = moment(to, ["h A"]).format("HH");
+
+          if (
+            (startHours >= slotBeginning && startHours < slotEnding) ||
+            (endHours > slotBeginning && endHours <= slotEnding) ||
+            (startHours <= slotBeginning && endHours >= slotEnding)
+          ) {
+            throw new ErrorHandler(
+              "There is an appointment in this slot already",
+              400
+            );
+          }
+        });
+
+        return next();
+      } catch (error) {
+        return next(error);
+      }
+    });
 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

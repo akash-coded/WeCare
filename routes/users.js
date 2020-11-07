@@ -4,6 +4,7 @@ const { body } = require("express-validator");
 
 // Require controller modules.
 const user_controller = require("../controllers/userController");
+const booking_controller = require("../controllers/bookingController");
 
 /// USER ROUTES ///
 
@@ -11,10 +12,11 @@ const user_controller = require("../controllers/userController");
 router.post(
   "/booking/:userId/:coachId",
   [[body("slot").trim().escape(), body("dateOfAppointment").trim().escape()]],
-  (req, res) => {
-    res.status(200).send(req.body);
-  }
+  booking_controller.create_booking
 );
+
+// define the route to return all appointments made by the user
+router.get("/booking/:userId", booking_controller.fetch_user_appointments);
 
 // define the route to reschedule or cancel an existing appointment
 router
@@ -28,9 +30,6 @@ router
   .delete((req, res) => {
     res.status(200).send(req.params);
   });
-
-// define the route to return all appointments made by the user
-router.get("/booking/:userId", user_controller.fetch_user_appointments);
 
 // define the user login route
 router.post("/login", [body("id").trim().escape()], user_controller.login_user);

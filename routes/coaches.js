@@ -4,11 +4,12 @@ const { body } = require("express-validator");
 
 // Require controller modules.
 const coach_controller = require("../controllers/coachController");
+const booking_controller = require("../controllers/bookingController");
 
 /// COACH ROUTES ///
 
 // define the route to return all appointments for a coach
-router.get("/booking/:coachId", coach_controller.fetch_coach_appointments);
+router.get("/booking/:coachId", booking_controller.fetch_coach_appointments);
 
 // define the route to enlist all available coaches
 router.get("/all", coach_controller.fetch_all_coaches);

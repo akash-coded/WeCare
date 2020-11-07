@@ -1,7 +1,5 @@
 const Coach = require("../models/coach");
-const Booking = require("../models/booking");
 const { ErrorHandler } = require("../helpers/error");
-const sanitize = require("mongo-sanitize");
 
 exports.register_coach = (req, res, next) => {
   Coach.createOne(req.body, function (err, coach) {
@@ -50,18 +48,4 @@ exports.fetch_all_coaches = (req, res, next) => {
     if (err) return next(new ErrorHandler(err));
     res.status(200).json(coaches);
   });
-};
-
-exports.fetch_coach_appointments = (req, res, next) => {
-  Booking.find()
-    .where("coachId")
-    .eq(sanitize(req.params.coachId))
-    .exec(function (err, bookings) {
-      if (err) return next(new ErrorHandler(err));
-
-      if (Array.isArray(bookings) && bookings.length === 0)
-        return next(new ErrorHandler("Could not find any bookings", 400));
-
-      res.status(200).json(bookings);
-    });
 };

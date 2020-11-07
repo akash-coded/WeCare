@@ -1,7 +1,7 @@
 // ./app.js
 
 /**
- * Required External Modules
+ * REQUIRED EXTERNAL MODULES
  */
 
 // importing the dependencies
@@ -10,40 +10,45 @@ const compression = require("compression");
 const path = require("path");
 const fs = require("fs");
 const helmet = require("helmet");
-const cors = require("cors");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const winston = require("winston");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const mongooseIncrement = require("mongoose-increment");
+const { handleError, ErrorHandler } = require("./helpers/error");
 increment = mongooseIncrement(mongoose);
 const users = require("./routes/users");
 const coaches = require("./routes/coaches");
-const { handleError, ErrorHandler } = require("./helpers/error");
 
-const Booking = require("./models/booking");
+const moment = require("moment");
+moment().format();
 
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // const bodyParser = require("body-parser");
 
 /**
- * App Variables
+ * APP VARIABLES
  */
 
 const app = express();
 const port = process.env.PORT || "3002";
+
+// configure cors
 const corsOptions = {
   origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
+
 // create a write stream (in append mode)
 const accessLogStream = fs.createWriteStream(
   path.join(__dirname, "/logs/access.log"),
   { flags: "a" }
 );
-// winston error logger
+
+// define winston error logger
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
@@ -88,52 +93,101 @@ logger.rejections.handle(
 );
 
 /**
- *  App Configuration
+ *  APP CONFIGURATION
  */
 
 // for gzip compression
 app.use(compression());
+
 // parse incoming requests with JSON payloads
 app.use(express.json());
+
 // parse cookie header and populate req.cookies with an object keyed by the cookie names
 app.use(cookieParser());
+
 // adding Helmet to enhance your API security by defining various HTTP headers
 app.use(helmet());
+
 // enabling CORS
 app.use(cors(corsOptions));
+
 // adding morgan to log HTTP requests
 app.use(morgan("combined", { stream: accessLogStream }));
+
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // app.use(bodyParser.json());
 
 /**
- * Routes Definitions (Defining Endpoints)
+ * ROUTES (ENDPOINTS) DEFINITION
  */
 
 // user-specific routes
 app.use("/users", users);
+
 // coach-specific routes
 app.use("/coaches", coaches);
-// catch all requests to unspecified paths
-app.get("/test", (req, res, next) => {
-  Booking.find()
+
+// testing route
+app.post("/test/:var/", (req, res, next) => {
+  mongoose.models["Booking"]
+    .find()
+    .select({ slot: 1, _id: 0 })
     .where("coachId")
-    .eq("CI-0002")
+    .eq(req.params.var)
+    .where("dateOfAppointment")
+    .eq(req.body.dateOfAppointment)
     .exec(function (err, bookings) {
-      if (err) res.json(err);
-      res.json(bookings);
+      if (err) return next(new ErrorHandler(err));
+
+      // if (bookings.length === 0) res.send("Slot available");
+
+      const [start, end] = req.body.slot.split(" to ");
+      const startHours = moment(start, ["h A"]).format("HH");
+      const endHours = moment(end, ["h A"]).format("HH");
+
+      let slots = [];
+      try {
+        slots = bookings.reduce((acc, val) => [...acc, val.slot], []);
+      } catch (e) {
+        return next(e);
+      }
+      try {
+        slots.forEach(function (v) {
+          const [from, to] = v.split(" to ");
+          const slotBeginning = moment(from, ["h A"]).format("HH");
+          const slotEnding = moment(to, ["h A"]).format("HH");
+
+          if (
+            (startHours >= slotBeginning && startHours < slotEnding) ||
+            (endHours > slotBeginning && endHours <= slotEnding) ||
+            (startHours <= slotBeginning && endHours >= slotEnding)
+          ) {
+            throw new ErrorHandler(
+              "There is an appointment in this slot already",
+              400
+            );
+          }
+        });
+
+        res.send("Slot available");
+      } catch (error) {
+        return next(error);
+      }
     });
 });
+
+// handle all invalid requests
 app.all("*", (req, res, next) => {
   next(new ErrorHandler("Invalid Path", 404));
 });
+
 // middleware for custom error handling
 app.use((err, req, res, next) => {
   handleError(err, res);
 });
 
 /**
- * Server Activation
+ * SERVER ACTIVATION
  */
 
 // connecting to MongoDB
@@ -158,5 +212,5 @@ app.listen(port, () => {
 });
 
 /**
- * Webpack HMR Activation
+ * WEBPACK HMR ACTIVATION
  */

@@ -1,4 +1,10 @@
-GET http://localhost:3002/test HTTP/1.1
+POST http://localhost:3002/test/CI-0001 HTTP/1.1
+content-type: application/json
+
+{
+    "slot": "11 PM to 2 AM",
+    "dateOfAppointment": "2020-11-10"
+}
 
 ###
 
@@ -70,6 +76,14 @@ GET http://localhost:3002/coaches/all HTTP/1.1
 
 ###
 
-GET http://localhost:3002/coaches/booking/CI-0002 HTTP/1.1
+GET http://localhost:3002/coaches/booking/CI-0001 HTTP/1.1
 
 ###
+
+POST http://localhost:3002/users/booking/UI-0002/CI-0001 HTTP/1.1
+content-type: application/json
+
+{
+    "slot": "8 AM to 9 AM",
+    "dateOfAppointment": "2020-11-10"
+}

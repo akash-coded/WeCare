@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const sanitize = require("mongo-sanitize");
 const uniqueValidator = require("mongoose-unique-validator");
-const Booking = require("./booking");
 const { ErrorHandler } = require("../helpers/error");
 const Schema = mongoose.Schema;
 
@@ -87,12 +86,12 @@ coachSchema.virtual("age").get(function () {
 });
 
 coachSchema.virtual("bookings").get(function () {
-  return Booking.find({ coachId: new RegExp(this.coachId, "i") }).exec(
-    function (err, bookings) {
+  return mongoose.models["Booking"]
+    .find({ coachId: new RegExp(this.coachId, "i") })
+    .exec(function (err, bookings) {
       if (err) return next(new ErrorHandler(err));
       return bookings;
-    }
-  );
+    });
 });
 
 /// QUERY HELPERS ///

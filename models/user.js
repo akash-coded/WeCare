@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const sanitize = require("mongo-sanitize");
-const uniqueValidator = require("mongoose-unique-validator");
 const { ErrorHandler } = require("../helpers/error");
 const Schema = mongoose.Schema;
+const sanitize = require("mongo-sanitize");
+const uniqueValidator = require("mongoose-unique-validator");
 
 moment().format();
 
