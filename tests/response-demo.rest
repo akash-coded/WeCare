@@ -80,10 +80,27 @@ GET http://localhost:3002/coaches/booking/CI-0001 HTTP/1.1
 
 ###
 
-POST http://localhost:3002/users/booking/UI-0002/CI-0001 HTTP/1.1
+POST http://localhost:3002/users/booking/UI-0009/CI-0009 HTTP/1.1
 content-type: application/json
 
 {
-    "slot": "8 AM to 9 AM",
+    "slot": "7 AM to 8 AM",
     "dateOfAppointment": "2020-11-10"
 }
+
+###
+
+PUT http://localhost:3002/booking/B-0005 HTTP/1.1
+content-type: application/json
+
+{
+    "slot": "10 AM to 11 PM",
+    "dateOfAppointment": "2020-11-4"
+}
+
+###
+DELETE http://localhost:3002/booking/B-0006 HTTP/1.1
+
+###
+GET http://localhost:3002/malicious/hacker HTTP/1.1
+

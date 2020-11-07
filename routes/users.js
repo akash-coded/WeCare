@@ -18,19 +18,6 @@ router.post(
 // define the route to return all appointments made by the user
 router.get("/booking/:userId", booking_controller.fetch_user_appointments);
 
-// define the route to reschedule or cancel an existing appointment
-router
-  .route("/booking/:bookingId")
-  .put(
-    [body("slot").trim().escape(), body("dateOfAppointment").trim().escape()],
-    (req, res) => {
-      res.status(200).send(req.params);
-    }
-  )
-  .delete((req, res) => {
-    res.status(200).send(req.params);
-  });
-
 // define the user login route
 router.post("/login", [body("id").trim().escape()], user_controller.login_user);
 

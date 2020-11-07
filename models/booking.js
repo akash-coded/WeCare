@@ -4,8 +4,8 @@ const Schema = mongoose.Schema;
 const User = require("./user");
 const Coach = require("./coach");
 const { ErrorHandler } = require("../helpers/error");
-const uniqueValidator = require("mongoose-unique-validator");
 const sanitize = require("mongo-sanitize");
+const uniqueValidator = require("mongoose-unique-validator");
 
 moment().format();
 
@@ -83,13 +83,6 @@ const bookingSchema = new Schema(
   }
 );
 
-/// SECONDARY INDEXES ///
-
-bookingSchema.index(
-  { coachId: 1, dateOfAppointment: 1, slot: 1 },
-  { unique: true }
-);
-
 /// VIRTUALS ///
 
 bookingSchema.virtual("user", {
@@ -112,10 +105,6 @@ bookingSchema.virtual("coach", {
 
 /// PLUGINS ///
 
-bookingSchema.plugin(uniqueValidator, {
-  message: "There is an appointment in this slot already",
-});
-
 bookingSchema.plugin(increment, {
   type: String,
   modelName: "Booking",
@@ -135,6 +124,23 @@ bookingSchema.statics.createOne = function (data, callback) {
       coachId: sanitize(data.coachId),
       dateOfAppointment: sanitize(data.dateOfAppointment),
       slot: sanitize(data.slot),
+    },
+    callback
+  );
+};
+
+bookingSchema.statics.findByBookingIdAndUpdate = function (data, callback) {
+  return this.findOneAndUpdate(
+    {
+      bookingId: sanitize(data.bookingId),
+    },
+    {
+      dateOfAppointment: sanitize(data.dateOfAppointment),
+      slot: sanitize(data.slot),
+    },
+    {
+      new: true,
+      runValidators: true,
     },
     callback
   );

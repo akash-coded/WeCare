@@ -18,14 +18,14 @@ const cors = require("cors");
 const mongooseIncrement = require("mongoose-increment");
 const { handleError, ErrorHandler } = require("./helpers/error");
 increment = mongooseIncrement(mongoose);
-const users = require("./routes/users");
-const coaches = require("./routes/coaches");
-
-const moment = require("moment");
-moment().format();
 
 // convert the body of incoming requests into JavaScript objects if express version < 4.16
 // const bodyParser = require("body-parser");
+
+// Require routes
+const users = require("./routes/users");
+const coaches = require("./routes/coaches");
+const booking = require("./routes/bookings");
 
 /**
  * APP VARIABLES
@@ -127,54 +127,8 @@ app.use("/users", users);
 // coach-specific routes
 app.use("/coaches", coaches);
 
-// testing route
-app.post("/test/:var/", (req, res, next) => {
-  mongoose.models["Booking"]
-    .find()
-    .select({ slot: 1, _id: 0 })
-    .where("coachId")
-    .eq(req.params.var)
-    .where("dateOfAppointment")
-    .eq(req.body.dateOfAppointment)
-    .exec(function (err, bookings) {
-      if (err) return next(new ErrorHandler(err));
-
-      // if (bookings.length === 0) res.send("Slot available");
-
-      const [start, end] = req.body.slot.split(" to ");
-      const startHours = moment(start, ["h A"]).format("HH");
-      const endHours = moment(end, ["h A"]).format("HH");
-
-      let slots = [];
-      try {
-        slots = bookings.reduce((acc, val) => [...acc, val.slot], []);
-      } catch (e) {
-        return next(e);
-      }
-      try {
-        slots.forEach(function (v) {
-          const [from, to] = v.split(" to ");
-          const slotBeginning = moment(from, ["h A"]).format("HH");
-          const slotEnding = moment(to, ["h A"]).format("HH");
-
-          if (
-            (startHours >= slotBeginning && startHours < slotEnding) ||
-            (endHours > slotBeginning && endHours <= slotEnding) ||
-            (startHours <= slotBeginning && endHours >= slotEnding)
-          ) {
-            throw new ErrorHandler(
-              "There is an appointment in this slot already",
-              400
-            );
-          }
-        });
-
-        res.send("Slot available");
-      } catch (error) {
-        return next(error);
-      }
-    });
-});
+// booking-specific routes
+app.use("/booking", booking);
 
 // handle all invalid requests
 app.all("*", (req, res, next) => {
